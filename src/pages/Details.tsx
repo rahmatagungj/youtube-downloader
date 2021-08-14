@@ -7,6 +7,10 @@ interface DetailsProps {
 }
 
 const Details = ({ allData, setAllData }: DetailsProps) => {
+  const handleClearAllData = () => {
+    setAllData(null);
+  };
+
   return (
     <div className="p-5 md:p-0 flex justify-center">
       <div className="bg-white shadow-xl p-3 rounded-lg w-full md:w-96">
@@ -42,6 +46,14 @@ const Details = ({ allData, setAllData }: DetailsProps) => {
               Download Video
             </button>
           </a>
+        </div>
+        <div className="flex justify-evenly items-center mt-2 flex-col md:flex-row">
+          <button
+            onClick={handleClearAllData}
+            className="p-3 w-full font-semibold transition duration-500 ease-in-out transform border-2 border-blue-500 mt-2 rounded-xl text-gray-600 hover:text-gray-50 hover:bg-blue-600"
+          >
+            Kembali ke Beranda
+          </button>
         </div>
       </div>
     </div>
