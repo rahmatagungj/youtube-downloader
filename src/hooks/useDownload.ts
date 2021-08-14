@@ -10,7 +10,9 @@ const UseDownload = async (url: string | null | undefined) => {
   const video = dataVideo.data;
   const audio = dataAudio.data;
 
-  return { audio, video };
+  let isSuccess = false;
+  if (audio?.status === 200) isSuccess = true;
+  return { audio, video, isSuccess };
 };
 
 export default UseDownload;

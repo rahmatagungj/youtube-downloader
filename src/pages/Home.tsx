@@ -2,6 +2,7 @@ import React from "react";
 import UseDownload from "../hooks/useDownload";
 import MainLayout from "../layouts/MainLayout";
 import Details from "./Details";
+import { useQuery } from "react-query";
 
 export interface IAllData {
   title: string;
@@ -12,27 +13,43 @@ export interface IAllData {
 }
 
 const Home = () => {
-  const [isLoading, setIsLoading] = React.useState<boolean>(false);
-  const [isError, setIsError] = React.useState<boolean>(false);
   const [allData, setAllData] = React.useState<IAllData | null>(null);
+  const [isError, setIsError] = React.useState<boolean>(false);
   const url = React.useRef<HTMLInputElement | null>(null);
 
-  const handleDownload = async () => {
-    setIsLoading(true);
-    if (isError) setIsError(false);
-    try {
-      const { audio, video } = await UseDownload(url.current?.value.toString());
+  const { isIdle, data, refetch, isFetching } = useQuery(
+    "repoData",
+    async () => {
+      const { audio, video, isSuccess } = await UseDownload(
+        url.current?.value.toString()
+      );
+
+      return { audio, video, isSuccess };
+    },
+    { enabled: false }
+  );
+
+  React.useEffect(() => {
+    if (data?.isSuccess) {
       setAllData({
-        title: audio.result.title,
-        description: audio.result.desc,
-        thumbnails: audio.result.album,
-        audioUrl: audio.result.download_audio,
-        videoUrl: video.result.download_video,
+        title: data.audio.result.title,
+        description: data.audio.result.desc,
+        thumbnails: data.audio.result.album,
+        audioUrl: data.audio.result.download_audio,
+        videoUrl: data.video.result.download_video,
       });
-    } catch (e) {
-      setIsError(true);
+      setIsError(false);
+    } else {
+      if (data) {
+        setIsError(true);
+      }
     }
-    setIsLoading(false);
+  }, [data]);
+
+  const handleDownload = async () => {
+    if (url.current?.value.toString()) {
+      refetch();
+    }
   };
 
   const RenderHome = () => {
@@ -66,18 +83,18 @@ const Home = () => {
                 placeholder="Masukan URL Video"
                 name="urlsite"
                 ref={url}
-                disabled={isLoading}
+                disabled={isFetching}
                 className="flex-grow w-full px-4 py-2 mb-4 md:mr-4 text-base text-black transition duration-650 ease-in-out transform rounded-lg bg-blueGray-200 focus:outline-none focus:border-purple-500 sm:mb-0 focus:bg-white focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2"
               />
             </div>
             <button
               onClick={handleDownload}
-              disabled={isLoading}
+              disabled={isFetching}
               className={`${
-                isLoading && "cursor-not-allowed"
+                isFetching && "cursor-not-allowed"
               } mx-auto md:mx-0 w-32 text-center justify-center md:w-20 flex items-center px-6 py-2 mt-auto font-semibold text-white transition duration-500 ease-in-out transform bg-blue-600 rounded-lg hover:bg-blue-700 focus:shadow-outline focus:outline-none focus:ring-2 ring-offset-current ring-offset-2`}
             >
-              {isLoading ? "Memuat" : "Download"}
+              {isFetching ? "Memuat" : "Download"}
             </button>
           </div>
         </div>
@@ -89,7 +106,7 @@ const Home = () => {
       <div className="flex flex-col h-screen">
         <div className="m-auto">
           {!allData && <RenderHome />}
-          {!isError && !isLoading && allData && (
+          {!isError && !isFetching && allData && !isIdle && (
             <Details allData={allData} setAllData={setAllData} />
           )}
         </div>
